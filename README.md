@@ -1,1 +1,1 @@
-# notification-service
+The Notification Service project is designed to serve as the backbone for sending notifications across different platforms. This repository includes the implementation of the application's entry point, the setup of an HTTP server, and the configuration of routes specific to notification dispatch. It aims to provide a robust and scalable solution for initializing and handling notification tasks efficiently.
