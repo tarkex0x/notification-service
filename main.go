@@ -9,7 +9,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func NotificationHandler(w http.ResponseWriter, r *http.Request) {
+func SendNotificationResponse(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Notification sent successfully!")
 }
 
@@ -19,15 +19,15 @@ func main() {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
-	port := os.Getenv("PORT")
-	if port == "" {
+	serverPort := os.Getenv("PORT")
+	if serverPort == "" {
 		log.Fatal("PORT must be set in environment variables")
 	}
 
-	http.HandleFunc("/send-notification", NotificationHandler)
+	http.HandleFunc("/send-notification", SendNotificationResponse)
 
-	log.Printf("Starting server on port %s...", port)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
+	log.Printf("Starting server on port %s...", serverPort)
+	if err := http.ListenAndServe(":"+serverPort, nil); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
