@@ -17,40 +17,58 @@ var notifications []Notification
 func main() {
 	http.HandleFunc("/create", createNotificationHandler)
 	http.HandleFunc("/send", sendNotificationHandler)
-	
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
 
+	startServer()
+}
+
+func startServer() {
+	port := getServerPort()
 	log.Printf("Server starting on port %s\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
+func getServerPort() string {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	return port
+}
+
 func createNotificationHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "Only POST method is allowed", http.StatusMethodNotAllowed)
-		return
+	if ensureMethod(w, r, "POST") {
+		var newNotification Notification
+		if decodeJSON(w, r, &newNotification) {
+			notifications = append(notifications, newNotification)
+			respondWithJSON(w, http.StatusCreated, newNotification)
+		}
 	}
-
-	var newNotification Notification
-	err := json.NewDecoder(r.Body).Decode(&newNotification)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	notifications = append(notifications, newNotification)
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(newNotification)
 }
 
 func sendNotificationHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, "Only GET method is allowed", http.StatusMethodNotAllowed)
-		return
+	if ensureMethod(w, r, "GET") {
+		respondWithJSON(w, http.StatusOK, notifications)
 	}
+}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(notifications)
+func ensureMethod(w http.ResponseWriter, r *http.Request, method string) bool {
+	if r.Method != method {
+		http.Error(w, method+" method is allowed", http.StatusMethodNotAllowed)
+		return false
+	}
+	return true
+}
+
+func decodeJSON(w http.ResponseWriter, r *http.Request, target interface{}) bool {
+	if err := json.NewDecoder(r.Body).Decode(target); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return false
+	}
+	return true
+}
+
+func respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(payload)
 }
