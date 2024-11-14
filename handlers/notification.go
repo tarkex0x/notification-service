@@ -53,7 +53,9 @@ func sendNotificationHandler(w http.ResponseWriter, r *http.Request) {
 
 func ensureMethod(w http.ResponseWriter, r *http.Request, method string) bool {
 	if r.Method != method {
-		http.Error(w, method+" method is allowed", http.StatusMethodNotAllowed)
+		errMsg := method + " method is allowed"
+		http.Error(w, errMsg, http.StatusMethodNotAllowed)
+		log.Printf("Method not allowed: %s, required: %s\n", r.Method, method)
 		return false
 	}
 	return true
@@ -61,7 +63,9 @@ func ensureMethod(w http.ResponseWriter, r *http.Request, method string) bool {
 
 func decodeJSON(w http.ResponseWriter, r *http.Request, target interface{}) bool {
 	if err := json.NewDecoder(r.Body).Decode(target); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errMsg := "Error decoding JSON: " + err.Error()
+		http.Error(w, errMsg, http.StatusBadRequest)
+		log.Printf("Failed to decode JSON: %v\n", err)
 		return false
 	}
 	return true
@@ -70,5 +74,9 @@ func decodeJSON(w http.ResponseWriter, r *http.Request, target interface{}) bool
 func respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(payload)
+	if err := json.NewEncoder(w).Encode(payload); err != nil {
+		// If encoding fails, log the error and don't expose it to the client
+		log.Printf("Failed to encode JSON: %v\n", err)
+		http.Error(w, "Failed to process request", http.StatusInternalServerError)
+	}
 }
