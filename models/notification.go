@@ -29,6 +29,32 @@ type Notification struct {
 
 func sendNotification(notification *Notification) {
     log.Printf("Sending notification: %+v\n", *notification)
+    sendNotificationBasedOnType(notification)
+}
+
+func sendNotificationBasedOnType(notification *Notification) {
+    switch notification.NotificationType {
+    case EmailNotification:
+        sendEmailNotification(notification)
+    case SMSNotification:
+        sendSMSNotification(notification)
+    case PushNotification:
+        sendPushNotification(notification)
+    default:
+        log.Println("Invalid notification type")
+    }
+}
+
+func sendEmailNotification(notification *Notification) {
+    log.Printf("Sending email notification to %s: %+v\n", notification.Recipient, *notification)
+}
+
+func sendSMSNotification(notification *Notification) {
+    log.Printf("Sending SMS notification to %s: %+v\n", notification.Recipient, *notification)
+}
+
+func sendPushNotification(notification *Notification) {
+    log.Printf("Sending push notification to %s: %+v\n", notification.Recipient, *notification)
 }
 
 func main() {
