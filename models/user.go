@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -33,24 +35,27 @@ type ContactMethod struct {
 }
 
 func init() {
-	if err := godotenv.Load(); err != nil {
-		panic("No .env file found")
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %s", err.Error())
 	}
 }
 
 func main() {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		panic("DATABASE_URL is not set in .env file")
+		log.Fatal("DATABASE_URL is not set in .env file")
 	}
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic("failed to connect database")
+		log.Fatalf("Failed to connect to database: %s", err.Error())
 	}
 
 	err = db.AutoMigrate(&User{}, &Preferences{}, &ContactMethod{})
 	if err != nil {
-		panic("failed to migrate database tables")
+		log.Fatalf("Failed to migrate database tables: %s", err.Error())
 	}
+
+	fmt.Println("Database connection and migration successful")
 }
